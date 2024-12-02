@@ -7,6 +7,9 @@ from selenium_stealth import stealth
 import src.c_utils.c_gallery as c_gallery
 from src.model.Property import Property
 from src.utils.images_processing import process_images
+import re
+import pandas as pd
+from src.utils.parse_sitemaps import parse_global_sitemap, parse_daily_sitemap
 
 
 class Bot:
@@ -57,6 +60,7 @@ class Bot:
             self.driver.find_element(By.ID, "didomi-notice-agree-button").click()
         except Exception as e:
             print(f"Cookie notice not found or already accepted: {e}")
+
 
     def get_property(self, url):
         """
@@ -122,5 +126,53 @@ class Bot:
         prop.set_images(images)
 
         return prop
+
+    def __get_sitemap(self, url):
+        """
+        Get the sitemap from the given URL.
+        :param url: The URL of the sitemap.
+        :return: The sitemap content.
+        """
+        self.driver.get(url)
+        sitemapindex = self.driver.find_elements(By.CLASS_NAME, "folder")
+
+        urls = []
+        for sitemap in sitemapindex:
+            loc = sitemap.text.split("\n")[1]
+            match = re.search(r"<loc>(.*?)</loc>", loc)
+
+            # Check if a match is found and extract the URL
+            if match:
+                url = match.group(1)
+                urls.append(url)
+
+        df = pd.DataFrame(urls, columns=["url"])
+        return df
+
+    def get_global_sitemap(self, url):
+        """
+        Get the global sitemap from the given URL.
+        :param url: The URL of the global sitemap.
+        :return: The sitemap content.
+        """
+        results = self.__get_sitemap(url)
+        return parse_global_sitemap(results)
+
+    def get_daily_sitemap(self, url):
+        """
+        Get the daily sitemap from the given URL.
+        :param url: The URL of the daily sitemap.
+        :return: The sitemap content.
+        """
+        results = self.__get_sitemap(url)
+        return parse_daily_sitemap(results)
+
+    def close(self):
+        """
+        Close the Chrome driver.
+        """
+        self.driver.close()
+
+
 
 

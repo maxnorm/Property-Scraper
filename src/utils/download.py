@@ -1,5 +1,6 @@
 import os
 import requests
+from datetime import datetime
 
 
 def download_image(filename, image_url, folder):
@@ -19,3 +20,21 @@ def download_image(filename, image_url, folder):
     except Exception as e:
         print(f"Error downloading image: {e}")
         return None
+
+def download_daily_sitemap(url, df):
+    """Download the daily sitemap from the provided URL."""
+    if not os.path.exists("data/sitemaps"):
+        os.makedirs("data/sitemaps")
+
+    path = url.split("/")[-1]
+    path = path.replace(".xml", "")
+
+    if "daily" in path:
+        path = path.replace("daily", f"{datetime.now().strftime('%Y-%m-%d')}")
+
+    file_path = f"data/sitemaps/{path}.csv"
+
+    print(f"Downloading sitemap: {file_path}")
+    df.to_csv(file_path, index=False)
+    print(f"Downloaded sitemap: {file_path}")
+
