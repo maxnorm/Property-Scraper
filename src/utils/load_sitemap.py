@@ -1,0 +1,50 @@
+import os
+import time
+import random
+import pandas as pd
+from src.bot import Bot
+from src.utils.download import download_daily_sitemap
+
+
+def load_sitemap():
+    """
+    Load the sitemap from the provided URL.
+    Only load the sitemap if it does not exist in the data/sitemaps folder.
+    :return:
+    """
+    load_global_sitemap()
+    time.sleep(5)
+    if not os.path.exists(os.getenv("SITEMAP_FOLDER")):
+        daily_urls = pd.read_csv(os.getenv("SITEMAP_FILE"))
+
+        for url in daily_urls["url"]:
+            try:
+                bot = Bot()
+                sitemap = bot.get_daily_sitemap(url)
+                download_daily_sitemap(url, sitemap)
+                time.sleep(random.randint(1, 10))
+                bot.close()
+                time.sleep(random.randint(1, 10))
+            except Exception as e:
+                print(f"An error occurred while loading the sitemap {url}")
+                print(e)
+    else:
+        print("Daily Sitemaps already exists.")
+
+
+def load_global_sitemap():
+    """
+    Load the global sitemap from the provided URL.
+    Only load the sitemap if it does not exist in the data/sitemaps folder.
+    :return:
+    """
+    if not os.path.exists(os.getenv("SITEMAP_FILE")):
+        try:
+            bot = Bot()
+            sitemap = bot.get_global_sitemap(os.getenv("C_SITEMAP_URL"))
+            sitemap.to_csv(os.getenv("SITEMAP_FILE"), index=False)
+            bot.close()
+        except Exception as e:
+            print(f"An error occurred while loading the global sitemap: {e}")
+    else:
+        print("Global sitemap already exists.")
