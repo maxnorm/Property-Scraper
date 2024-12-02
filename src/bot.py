@@ -118,7 +118,7 @@ class Bot:
 
             key = characteristic.find_element(By.CLASS_NAME, "carac-title").text
             value = characteristic.find_element(By.CLASS_NAME, "carac-value").text
-            prop.add_characteristic(key, value)
+            prop.add_feature(key, value)
 
         c_gallery.open_gallery(self.driver)
         images = c_gallery.get_images_url(self.driver)

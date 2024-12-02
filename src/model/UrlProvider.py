@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 
-class UrlDispenser:
+class UrlProvider:
     def __init__(self):
         self.files = self.__load_filenames()
         self.urls = None

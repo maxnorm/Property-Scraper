@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 from src.bot import Bot
-from src.model.UrlDispenser import UrlDispenser
+from src.model.UrlProvider import UrlProvider
 from src.utils.csv_utils import add_to_csv, create_property_csv, add_images_to_csv, create_images_csv
 from dotenv import load_dotenv
 from src.utils.load_sitemap import load_sitemap
@@ -36,7 +36,7 @@ def start():
     Start the bot.
     """
     pre_start()
-    url_dispenser = UrlDispenser()
+    url_dispenser = UrlProvider()
 
     error_df = pd.DataFrame(columns=["url", "error"])
 
