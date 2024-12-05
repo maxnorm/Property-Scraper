@@ -8,7 +8,11 @@ def download_image(filename, image_url, folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
     try:
-        response = requests.get(image_url, stream=True)
+        proxies = {
+            "http": os.getenv("PROXY_HTTP"),
+            "https": os.getenv("PROXY_HTTPS")
+        }
+        response = requests.get(image_url, stream=True, proxies=proxies)
         if response.status_code == 200:
             file_path = os.path.join(folder, f"{filename}.jpg")
             with open(file_path, 'wb') as file:
@@ -34,7 +38,6 @@ def download_daily_sitemap(url, df):
 
     file_path = f"data/sitemaps/{path}.csv"
 
-    print(f"Downloading sitemap: {file_path}")
     df.to_csv(file_path, index=False)
     print(f"Downloaded sitemap: {file_path}")
 

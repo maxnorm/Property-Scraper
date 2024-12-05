@@ -2,12 +2,16 @@ import pandas as pd
 from src.model.Property import get_property_columns
 from src.model.Image import get_images_columns
 import os
+from threading import Lock
 
+property_lock = Lock()
+images_lock = Lock()
 
 def add_to_csv(data, path):
     """Add data to a CSV file."""
     df = pd.DataFrame(data)
-    df.to_csv(path, mode='a', header=False, index=False)
+    with property_lock:
+        df.to_csv(path, mode='a', header=False, index=False)
 
 
 def add_images_to_csv(images, property_id, path):
@@ -15,15 +19,8 @@ def add_images_to_csv(images, property_id, path):
     data = [image.get_csv_data() for image in images]
     df = pd.DataFrame(data)
     df["property_id"] = property_id
-    df.to_csv(path, mode='a', header=False, index=False)
-
-
-def create_images_csv():
-    """Create the images CSV file."""
-    if not os.path.exists("data/images.csv"):
-        os.makedirs("data/images.csv")
-    df = pd.DataFrame(columns=get_images_columns())
-    df.to_csv("data/images.csv", index=False)
+    with images_lock:
+        df.to_csv(path, mode='a', header=False, index=False)
 
 
 def create_property_csv():

@@ -1,34 +1,32 @@
 import os
 
-import pandas as pd
-
 from src.bot import Bot
 from src.model.UrlProvider import UrlProvider
 from src.utils.csv_utils import add_to_csv, create_property_csv, add_images_to_csv, create_images_csv
 from dotenv import load_dotenv
-from src.utils.load_sitemap import load_sitemap
+from src.utils.load_sitemap import load_sitemaps
+import logging
+from concurrent.futures import ThreadPoolExecutor
 
 
-def process_url(url, error_df):
+def process_url(url):
     """
     Process a URL and add the property to the CSV file.
     :param url:
-    :param error_df:
     :return:
     """
+    bot = Bot(proxied=True)
     try:
-        bot = Bot()
         prop = bot.get_property(url)
+        bot.close()
+
         add_to_csv([prop.get_csv_data()], os.getenv("PROPERTY_FILE"))
         add_images_to_csv(prop.images, prop.id, os.getenv("IMAGES_FILE"))
-        bot.close()
     except Exception as e:
-        print(f"An error occurred while processing the property: {url}")
-
-        new_row = pd.DataFrame([{"url": url, "error": str(e)}])
-        error_df = pd.concat([error_df, new_row], ignore_index=True)
-
-    return error_df
+        bot.close()
+        logging.error(f"An error occurred while processing the property:\n"
+                      f"URL: {url}\n"
+                      f"Error: {e}")
 
 
 def start():
@@ -38,27 +36,43 @@ def start():
     pre_start()
     url_dispenser = UrlProvider()
 
-    error_df = pd.DataFrame(columns=["url", "error"])
+    max_threads = int(os.getenv("MAX_THREADS", 5))
 
-    while True:
-        current_url = url_dispenser.next()
+    with ThreadPoolExecutor(max_threads) as executor:
+        while True:
+            current_url = url_dispenser.next()
+            if current_url is None:
+                logging.info("No more URLs to process.")
+                break
 
-        if current_url is None:
-            print("All URLs have been processed.")
-            break
-
-        error_df = process_url(current_url, error_df)
-
-    error_df.to_csv("data/errors.csv", index=False)
+            logging.info(f"Processing URL: {current_url}")
+            executor.submit(process_url, current_url)
 
 
 def pre_start():
     """Prepare the environment for the bot."""
     create_property_csv()
     create_images_csv()
-    load_sitemap()
+    load_sitemaps()
 
 
 if __name__ == '__main__':
     load_dotenv()
+
+    logging.basicConfig(
+        filename='bot.log',
+        encoding='utf-8',
+        filemode='a',
+        format='{asctime} | {levelname} - {message}',
+        style='{',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        level = logging.INFO
+    )
+
+    Bot.active_headless()
+
+    max_threads = int(os.getenv("MAX_THREADS", 5))
+    print(f"MAX: {max_threads} threads.")
+
     start()
+

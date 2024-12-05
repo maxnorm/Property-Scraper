@@ -4,9 +4,10 @@ import random
 import pandas as pd
 from src.bot import Bot
 from src.utils.download import download_daily_sitemap
+import logging
+from concurrent.futures import ThreadPoolExecutor
 
-
-def load_sitemap():
+def load_sitemaps():
     """
     Load the sitemap from the provided URL.
     Only load the sitemap if it does not exist in the data/sitemaps folder.
@@ -17,19 +18,29 @@ def load_sitemap():
     if not os.path.exists(os.getenv("SITEMAP_FOLDER")):
         daily_urls = pd.read_csv(os.getenv("SITEMAP_FILE"))
 
-        for url in daily_urls["url"]:
-            try:
-                bot = Bot()
-                sitemap = bot.get_daily_sitemap(url)
-                download_daily_sitemap(url, sitemap)
-                time.sleep(random.randint(1, 10))
-                bot.close()
-                time.sleep(random.randint(1, 10))
-            except Exception as e:
-                print(f"An error occurred while loading the sitemap {url}")
-                print(e)
+        max_threads = int(os.getenv("MAX_THREADS", 5))
+        with ThreadPoolExecutor(max_threads) as executor:
+            for url in daily_urls["url"]:
+                executor.submit(load_sitemap, url)
+
     else:
         print("Daily Sitemaps already exists.")
+
+
+def load_sitemap(url):
+    """
+    Load the sitemap from the provided URL.
+    :param url: The URL of the sitemap.
+    """
+    try:
+        bot = Bot()
+        sitemap = bot.get_daily_sitemap(url)
+        download_daily_sitemap(url, sitemap)
+        time.sleep(random.randint(1, 10))
+        bot.close()
+        time.sleep(random.randint(1, 10))
+    except Exception as e:
+        logging.error(f"An error occurred while loading the daily sitemap: {e}")
 
 
 def load_global_sitemap():

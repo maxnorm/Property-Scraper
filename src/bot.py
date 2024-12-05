@@ -1,4 +1,6 @@
 import os
+import time
+
 from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.chrome.service import Service
@@ -11,6 +13,11 @@ import re
 import pandas as pd
 from src.utils.parse_sitemaps import parse_global_sitemap, parse_daily_sitemap
 
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+
+import logging
+
 
 class Bot:
     headless = False
@@ -22,8 +29,7 @@ class Bot:
         """
         Bot.headless = True
 
-    def __init__(self):
-        # Setting up the Chrome driver
+    def __init__(self, proxied=False):
         service = Service(driverpath=os.getenv('DRIVER_PATH'))
         options = webdriver.ChromeOptions()
 
@@ -34,12 +40,16 @@ class Bot:
         options.add_argument('--no-sandbox')
         options.add_argument('--window-size=1920x1080')
 
+        if proxied:
+            options = self.__set_proxy(options)
+
         self.driver = webdriver.Chrome(service=service, options=options)
         self.__stealth()
 
         self.driver.delete_all_cookies()
 
         self.driver.implicitly_wait(10)
+
 
     def __stealth(self):
         stealth(self.driver,
@@ -51,15 +61,21 @@ class Bot:
                 fix_hairline=True,
                 )
 
-    def __proxy(self):
-        # TODO Implement proxy settings
-        pass
+    def __set_proxy(self, options):
+        proxy = os.getenv('PROXY')
+        options.add_argument(f'--proxy-server={proxy}')
+        return options
+
+    def __test_ip(self):
+        self.driver.get("https://httpbin.org/ip")
+        ip = self.driver.find_element(By.TAG_NAME, "pre").text.replace("{\n  \"origin\": \"", "").replace("\"\n}", "")
+        logging.info(f"CURRENT IP: {ip}")
 
     def accept_cookies(self):
         try:
             self.driver.find_element(By.ID, "didomi-notice-agree-button").click()
         except Exception as e:
-            print(f"Cookie notice not found or already accepted: {e}")
+            logging.error(f"Error accepting cookies: {e}")
 
 
     def get_property(self, url):
