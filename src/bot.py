@@ -20,14 +20,14 @@ import logging
 
 
 class Bot:
-    headless = False
+    headless = True
 
     @staticmethod
-    def active_headless():
+    def active_headful():
         """
-        Activate the headless mode for the bot.
+        Activate headful mode.
         """
-        Bot.headless = True
+        Bot.headless = False
 
     def __init__(self, proxied=False):
         service = Service(driverpath=os.getenv('DRIVER_PATH'))
