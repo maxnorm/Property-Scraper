@@ -17,11 +17,15 @@ def process_url(url):
     :param url:
     :return:
     """
-    logging.info(f"Processing URL: {url}")
-    bot = Bot(proxied=True)
+    bot = Bot()
     try:
+        logging.info(f"Processing URL: {url}")
         prop = bot.get_property(url)
         bot.close()
+
+        if prop is None:
+            logging.info(f"Property already appended: {url}")
+            return
 
         add_to_csv([prop.get_csv_data()], os.getenv("PROPERTY_FILE"))
         add_images_to_csv(prop.images, prop.id, os.getenv("IMAGES_FILE"))

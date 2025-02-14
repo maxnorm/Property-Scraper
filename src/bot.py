@@ -50,8 +50,10 @@ class Bot:
 
         self.driver.implicitly_wait(10)
 
-
     def __stealth(self):
+        """
+        Activate the stealth mode. This will make the bot more human-like with device and browser information.
+        """
         stealth(self.driver,
                 languages=["en-US", "en"],
                 vendor="Google Inc.",
@@ -62,6 +64,11 @@ class Bot:
                 )
 
     def __set_proxy(self, options):
+        """
+        Set the proxy for the bot.
+        :param options: The Chrome options.
+        :return: The Chrome options with the proxy set.
+        """
         proxy = os.getenv('PROXY')
         options.add_argument(f'--proxy-server={proxy}')
         return options
@@ -72,6 +79,9 @@ class Bot:
         logging.info(f"CURRENT IP: {ip}")
 
     def accept_cookies(self):
+        """
+        Accept the cookies on the website. This is necessary to access the content.
+        """
         try:
             self.driver.find_element(By.ID, "didomi-notice-agree-button").click()
         except Exception as e:
@@ -81,12 +91,15 @@ class Bot:
         """
         Get the property information from the given URL.
         :param url: The URL of the property.
-        :return: The Property object.
+        :return: The Property object or None if the property is already in the list.
         """
         self.driver.get(url)
         self.accept_cookies()
 
         listing_id = self.driver.find_element(By.ID, "ListingDisplayId").text
+
+        if listing_id in Property.append_property_ids:
+            return None
 
         head_info = self.driver.find_element(By.CLASS_NAME, "house-info")
 
@@ -189,7 +202,3 @@ class Bot:
         Close the Chrome driver.
         """
         self.driver.close()
-
-
-
-

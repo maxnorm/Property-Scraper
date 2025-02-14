@@ -13,7 +13,7 @@ def get_property_columns():
         "year_built", "building_style", "walkscore", "property_use",
         "total_parking", "fireplace", "nb_units", "residential_units",
         "main_unit", "gross_revenue", "additional_features", "pool",
-        "zoning", "net_area", "type_coproperty"
+        "zoning", "net_area", "type_coproperty", "listing_id"
     ]
 
 
@@ -21,10 +21,14 @@ class Property:
     """
     Property class to store information about a property
     """
+    append_property_ids = set()
+    """
+    Property class to store information about a property
+    """
     def __init__(self, listing_id, category, address, price=None,
                  rooms=None, beds=None, baths=None, description=None):
-        print(hash(listing_id))
-        self.id = hash(listing_id)
+        self.append_property_ids.add(listing_id)
+        self.id = str(uuid.uuid4())
         self.category = category
         self.address = address
         self.price = price
@@ -50,6 +54,7 @@ class Property:
         self.net_area = None
         self.type_coproperty = None
         self.images = []
+        self.listing_id = listing_id
 
     def set_images(self, images):
         """
@@ -130,7 +135,8 @@ class Property:
             "pool": self.pool,
             "zoning": self.zoning,
             "net_area": self.net_area,
-            "type_coproperty": self.type_coproperty
+            "type_coproperty": self.type_coproperty,
+            "listing_id": self.listing_id
         }
 
     def __str__(self):
