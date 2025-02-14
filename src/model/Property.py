@@ -21,9 +21,10 @@ class Property:
     """
     Property class to store information about a property
     """
-    def __init__(self, category, address, price=None,
+    def __init__(self, listing_id, category, address, price=None,
                  rooms=None, beds=None, baths=None, description=None):
-        self.id = str(uuid.uuid4())
+        print(hash(listing_id))
+        self.id = hash(listing_id)
         self.category = category
         self.address = address
         self.price = price

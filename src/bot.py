@@ -77,7 +77,6 @@ class Bot:
         except Exception as e:
             logging.error(f"Error accepting cookies: {e}")
 
-
     def get_property(self, url):
         """
         Get the property information from the given URL.
@@ -86,6 +85,8 @@ class Bot:
         """
         self.driver.get(url)
         self.accept_cookies()
+
+        listing_id = self.driver.find_element(By.ID, "ListingDisplayId").text
 
         head_info = self.driver.find_element(By.CLASS_NAME, "house-info")
 
@@ -121,7 +122,7 @@ class Bot:
         description_content = self.driver.find_element(By.CLASS_NAME, "property-description")
         description = description_content.find_element(By.CSS_SELECTOR, "[itemprop='description']").text
 
-        prop = Property(category, address, price, rooms, beds, baths, description)
+        prop = Property(listing_id, category, address, price, rooms, beds, baths, description)
 
         characteristics = description_section.find_elements(By.CLASS_NAME, "carac-container")
         for characteristic in characteristics:
