@@ -1,5 +1,6 @@
 import os
 import argparse
+import time
 
 from src.bot import Bot
 from src.model.UrlProvider import UrlProvider
@@ -41,13 +42,15 @@ def start():
     max_threads = int(os.getenv("MAX_THREADS", 5))
 
     with ThreadPoolExecutor(max_threads) as executor:
+        i = 0
         while True:
             current_url = url_dispenser.next()
             if current_url is None:
                 break
-
             executor.submit(process_url, current_url)
-        logging.info("No more URLs to process.")
+            i += 1
+        print(f"No more URLs to process. Total URLs process: {i}")
+        logging.info(f"No more URLs to process. Total URLs process: {i}")
 
 
 def pre_start():

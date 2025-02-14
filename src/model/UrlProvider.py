@@ -14,24 +14,42 @@ class UrlProvider:
     def __load_filenames(self):
         folder_path = Path(os.getenv("SITEMAP_FOLDER"))
         file_names = [file.name for file in folder_path.iterdir() if file.is_file()]
+        file_names.reverse()
         return file_names
 
     def __load_current_file(self):
-        file_path = os.path.join(os.getenv("SITEMAP_FOLDER"), self.files[self.index])
-        urls = pd.read_csv(file_path)
-        self.urls = urls["url"]
+        if self.file_index >= len(self.files):
+            self.urls = []
+            return
+
+        file_name = self.files[self.file_index]
+        file_path = os.path.join(os.getenv("SITEMAP_FOLDER"), file_name)
+
+        try:
+            df = pd.read_csv(file_path)
+            if "url" in df.columns and not df["url"].empty:
+                self.urls = df["url"].tolist()
+                self.index = 0  # Reset URL index
+                return
+        except Exception as e:
+            print(f"Error loading {file_name}: {e}")
+
+        self.file_index += 1
+        self.__load_current_file()
 
     def next(self):
         """
         Get the next URL from the dispenser.
         :return: The next URL.
         """
-        if self.file_index >= len(self.files):
-            return None
-        if self.index >= len(self.urls):
+        while self.file_index < len(self.files):
+            if self.index < len(self.urls):
+                url = self.urls[self.index]
+                self.index += 1
+                return url
+
+            self.file_index += 1
             self.index = 0
             self.__load_current_file()
-            self.file_index += 1
-        url = self.urls[self.index]
-        self.index += 1
-        return url
+
+        return None
